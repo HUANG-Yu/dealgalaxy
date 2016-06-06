@@ -3,6 +3,7 @@ import urllib2
 import urllib
 import re
 
+'''Define some user agents to wrap the scraper as some kind of browsers sending requests'''
 def get_user_agent():
     user_agents = ['Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20130406 Firefox/23.0', \
     'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0) Gecko/20100101 Firefox/18.0', \
@@ -18,12 +19,14 @@ def get_user_agent():
     'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.0; Trident/5.0; TheWorld)']
     return user_agents
 
+'''Get the webpage body in fully plain text'''
 def getHtml(url):
     page = urllib.urlopen(url)
     html = page.read()
     # print(html)
     return html
 
+'''Getting websites and their relevant cash back values in pairs'''
 def get_websites_cb_pairs(html):
     sites_reg1 = r'<a href="/coupons/(.+?)/index.htm" class="cb prox-b f-18 nohover">(.+?)\n'
     sites_re_obj1 = re.compile(sites_reg1)
@@ -40,6 +43,7 @@ def get_websites_cb_pairs(html):
         x = x + 1
     print x
 
+'''Get thos websites tuples whose cash back doubles'''
 def get_double_cb_websites(html):
     sites_reg = r'title="Get a great deal from (.+?) plus (.+?)% Cash Back from Ebates!"'
     sites_re_obj = re.compile(sites_reg)
@@ -62,7 +66,7 @@ def get_website_links(cur_html):
         x = x + 1
     print x
     
-
+'''Get the websites whose cash back values increases and their old cash back values in a tuples, representing them in a list format'''
 def cb_increase_websites(html):
     re1 = r'<a href="/coupons/(.+?)/index.htm" class="cb prox-b cb prox-b f-18 nohover">(.+?)\n\t+<span class="cb-was prox-r f-12">was (.+?)</span>'
     re_obj1 = re.compile(re1)
@@ -79,8 +83,7 @@ def cb_increase_websites(html):
         x = x + 1
     print x
 
-
-
+'''Setting up user agents'''
 def agents():
     url = 'http://www.server.com/login'
     user_agent = 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)'  
@@ -91,12 +94,11 @@ def agents():
     response = urllib2.urlopen(request)  
     page = response.read()
 
+'''Entrance of the program'''
+def main():
+    html = getHtml("http://www.ebates.com/stores/all/index.htm?navigation_id=22763")
+    cb_increase_websites(html)
 
-html = getHtml("http://www.ebates.com/stores/all/index.htm?navigation_id=22763")
-
-# get_website_links(cur_html)
-
-cb_increase_websites(html)
 
 ''' processing - change whitespace with hyphen
 double_cb_html = getHtml("http://www.ebates.com/summer-sales.htm?navigation_id=22763")
@@ -105,6 +107,3 @@ get_double_cb_websites(double_cb_html)
 
 get_websites_cb_pairs(html)
 '''
-
-
-# print getImg(html)
