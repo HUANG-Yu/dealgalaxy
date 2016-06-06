@@ -1,7 +1,12 @@
 #coding=utf-8
-import urllib2
-import urllib
 import re
+import urllib
+import urllib2
+import datetime
+from ebaysdk.exception import ConnectionError
+from ebaysdk.finding import Connection as Finding
+
+# --TODO-- appending time info to the store names, saving them all to file
 
 '''Define some user agents to wrap the scraper as some kind of browsers sending requests'''
 def get_user_agent():
@@ -38,10 +43,19 @@ def get_websites_cb_pairs(html):
     sites_re_obj3 = re.compile(sites_reg3)
     sites_list3 = re.findall(sites_re_obj3, html)
     x = 0
+    res = list()
     for pair in sites_list1 + sites_list2 + sites_list3:
-        print pair
+        url = 'https://www.google.com/webhp?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8#q=%s' % pair[0]
+        cur_list = list(pair)
+        # change hyphen to space for more readability
+        cur_list[0] = cur_list[0].replace("-", " ")
+        # print cur_list[0]
+        cur_list.append(url)
+        # print cur_list
+        res.append(cur_list)
         x = x + 1
     print x
+    return res
 
 '''Get thos websites tuples whose cash back doubles'''
 def get_double_cb_websites(html):
@@ -78,6 +92,8 @@ def cb_increase_websites(html):
     for each in tuple1 + tuple2:
         url = 'https://www.google.com/webhp?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8#q=%s' % each[0]
         cur_list = list(each)
+        # change hyphen to space for more readability
+        cur_list[0] = cur_list[0].replace("-", " ")
         cur_list.append(url)
         print cur_list
         x = x + 1
@@ -94,11 +110,29 @@ def agents():
     response = urllib2.urlopen(request)  
     page = response.read()
 
-'''Entrance of the program'''
+'''Entrance function of the program'''
 def main():
     html = getHtml("http://www.ebates.com/stores/all/index.htm?navigation_id=22763")
-    cb_increase_websites(html)
+    s3 = get_websites_cb_pairs(html)
+    ebay_api_data(s3)
+    # get_double_cb_websites(html)
+    # cb_increase_websites(html)
 
+'''get the gift card information from ebay api'''
+def ebay_api_data(input_list):
+    try:
+        api = Finding(appid="YuHUANG-insightd-PRD-04d8cb02c-4739185d")
+        for cur_list in input_list:
+            response = api.execute('findItemsAdvanced', {'keywords': cur_list[0] + 'Gift Card'})
+            print(response.dict())
+    except ConnectionError as e:
+        print(e)
+        print(e.response.dict())
+
+
+# Running
+if __name__ == '__main__':
+    main()
 
 ''' processing - change whitespace with hyphen
 double_cb_html = getHtml("http://www.ebates.com/summer-sales.htm?navigation_id=22763")
