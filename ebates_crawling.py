@@ -1,6 +1,22 @@
 #coding=utf-8
+import urllib2
 import urllib
 import re
+
+def get_user_agent():
+    user_agents = ['Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20130406 Firefox/23.0', \
+    'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0) Gecko/20100101 Firefox/18.0', \
+    'Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/533+ \
+    (KHTML, like Gecko) Element Browser 5.0', \
+    'IBM WebExplorer /v0.94', 'Galaxy/1.0 [en] (Mac OS X 10.5.6; U; en)', \
+    'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)', \
+    'Opera/9.80 (Windows NT 6.0) Presto/2.12.388 Version/12.14', \
+    'Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) \
+    Version/6.0 Mobile/10A5355d Safari/8536.25', \
+    'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) \
+    Chrome/28.0.1468.0 Safari/537.36', \
+    'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.0; Trident/5.0; TheWorld)']
+    return user_agents
 
 def getHtml(url):
     page = urllib.urlopen(url)
@@ -35,24 +51,50 @@ def get_double_cb_websites(html):
         i = i + 1
     print i
 
-def cb_increase_websites(html):
-    after_re = r'<a href="/coupons/(.+?)/index.htm" class="cb prox-b cb prox-b f-18 nohover">(.+?)\n'
-    after_re_obj = re.compile(after_re)
-    after_list = re.findall(after_re_obj, html)
-    before_re = r'<span class="cb-was prox-r f-12">was (.+?)</span>'
-    before_re_obj = re.compile(before_re)
-    before_list = re.findall(before_re_obj, html)
+# method broken because of Google encryption
+def get_website_links(cur_html):
+    link_re = r',event\)" data\-href="(.+?)">'
+    link_re_obj = re.compile(link_re)
+    link_list = re.findall(link_re_obj, cur_html)
     x = 0
-    for before in after_list:
-        print before
+    for link in link_list:
+        print link
+        x = x + 1
+    print x
+    
+
+def cb_increase_websites(html):
+    re1 = r'<a href="/coupons/(.+?)/index.htm" class="cb prox-b cb prox-b f-18 nohover">(.+?)\n\t+<span class="cb-was prox-r f-12">was (.+?)</span>'
+    re_obj1 = re.compile(re1)
+    tuple1 = re.findall(re_obj1, html)
+    re2 = r'<a href="/coupons/(.+?)/index.htm" class="cb prox-b f-18 nohover">(.+?)\n +<span class="cb-was prox-r f-12">was (.+?)</span>'
+    re_obj2 = re.compile(re2)
+    tuple2 = re.findall(re_obj2, html)
+    x = 0
+    for each in tuple1 + tuple2:
+        url = 'https://www.google.com/webhp?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8#q=%s' % each[0]
+        cur_list = list(each)
+        cur_list.append(url)
+        print cur_list
         x = x + 1
     print x
 
 
 
+def agents():
+    url = 'http://www.server.com/login'
+    user_agent = 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)'  
+    values = {'username' : 'yh1456@nyu.edu',  'password' : 'Yu//910503' }  
+    headers = { 'User-Agent' : user_agent }  
+    data = urllib.urlencode(values)  
+    request = urllib2.Request(url, data, headers)  
+    response = urllib2.urlopen(request)  
+    page = response.read()
+
+
 html = getHtml("http://www.ebates.com/stores/all/index.htm?navigation_id=22763")
 
-# get_websites_cb_pairs(html)
+# get_website_links(cur_html)
 
 cb_increase_websites(html)
 
@@ -60,6 +102,8 @@ cb_increase_websites(html)
 double_cb_html = getHtml("http://www.ebates.com/summer-sales.htm?navigation_id=22763")
 
 get_double_cb_websites(double_cb_html)
+
+get_websites_cb_pairs(html)
 '''
 
 
