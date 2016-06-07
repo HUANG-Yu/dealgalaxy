@@ -1,8 +1,11 @@
 #coding=utf-8
 import re
+import json
+import random
 import urllib
 import urllib2
 import datetime
+import string
 from ebaysdk.exception import ConnectionError
 from ebaysdk.finding import Connection as Finding
 
@@ -47,11 +50,11 @@ def get_websites_cb_pairs(html):
     for pair in sites_list1 + sites_list2 + sites_list3:
         url = 'https://www.google.com/webhp?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8#q=%s' % pair[0]
         cur_list = list(pair)
-        # change hyphen to space for more readability
-        cur_list[0] = cur_list[0].replace("-", " ")
+        # uncomment to change hyphen to space for more readability
+        # cur_list[0] = cur_list[0].replace("-", " ")
         # print cur_list[0]
         cur_list.append(url)
-        # print cur_list
+        print cur_list
         res.append(cur_list)
         x = x + 1
     print x
@@ -92,10 +95,10 @@ def cb_increase_websites(html):
     for each in tuple1 + tuple2:
         url = 'https://www.google.com/webhp?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8#q=%s' % each[0]
         cur_list = list(each)
-        # change hyphen to space for more readability
-        cur_list[0] = cur_list[0].replace("-", " ")
+        # uncomment to change hyphen to space for more readability
+        # cur_list[0] = cur_list[0].replace("-", " ")
         cur_list.append(url)
-        print cur_list
+        # print cur_list
         x = x + 1
     print x
 
@@ -110,14 +113,6 @@ def agents():
     response = urllib2.urlopen(request)  
     page = response.read()
 
-'''Entrance function of the program'''
-def main():
-    html = getHtml("http://www.ebates.com/stores/all/index.htm?navigation_id=22763")
-    s3 = get_websites_cb_pairs(html)
-    ebay_api_data(s3)
-    # get_double_cb_websites(html)
-    # cb_increase_websites(html)
-
 '''get the gift card information from ebay api'''
 def ebay_api_data(input_list):
     try:
@@ -128,6 +123,42 @@ def ebay_api_data(input_list):
     except ConnectionError as e:
         print(e)
         print(e.response.dict())
+
+'''enlarge the cash back links dataset'''
+def create_duplicates_cb_links(cb_lists):
+    new_list = list()
+    i = len(cb_lists)
+    for x in range(0, i):
+        for cur_list in cb_lists:
+            cur_list[2] = cur_list[2] + random.choice(string.letters)
+            # print cur_list
+            new_list.append(cur_list)
+    new_list = cb_lists + new_list
+    print len(new_list)
+
+'''enlarge the ebay api dataset'''
+def create_duplicates_ebay(ebay_lists):
+    new_list = list()
+    i = len(ebay_lists)
+    for x in range(0, i):
+        for cur_list in ebay_lists:
+            cur_list = cur_list
+            # -- TODO --
+    print i
+
+'''convert lists to json object to store them in s3/spark'''
+def lists_to_json(cb_lists):
+    # -- TODO --
+    return cb_lists
+
+'''Entrance function of the program'''
+def main():
+    html = getHtml("http://www.ebates.com/stores/all/index.htm?navigation_id=22763")
+    cb_lists = get_websites_cb_pairs(html)
+    duplicates_list = create_duplicates_cb_links(cb_lists)
+    # ebay_api_data(cb_lists)
+    # get_double_cb_websites(html)
+    # cb_increase_websites(html)
 
 
 # Running
