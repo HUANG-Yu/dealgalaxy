@@ -27,7 +27,18 @@ def get_user_agent():
     'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.0; Trident/5.0; TheWorld)']
     return user_agents
 
-'''Get the webpage body in fully plain text'''
+'''Setting up user agents'''
+def agents():
+    url = 'http://www.server.com/login'
+    user_agent = 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)'  
+    values = {'username' : 'yh1456@nyu.edu',  'password' : 'Yu//910503' }  
+    headers = { 'User-Agent' : user_agent }  
+    data = urllib.urlencode(values)  
+    request = urllib2.Request(url, data, headers)  
+    response = urllib2.urlopen(request)  
+    page = response.read()
+
+'''Get the webpage body in full plain text'''
 def getHtml(url):
     page = urllib.urlopen(url)
     html = page.read()
@@ -54,10 +65,10 @@ def get_websites_cb_pairs(html):
         # cur_list[0] = cur_list[0].replace("-", " ")
         # print cur_list[0]
         cur_list.append(url)
-        print cur_list
+        # print cur_list
         res.append(cur_list)
         x = x + 1
-    print x
+    # print x
     return res
 
 '''Get thos websites tuples whose cash back doubles'''
@@ -92,6 +103,7 @@ def cb_increase_websites(html):
     re_obj2 = re.compile(re2)
     tuple2 = re.findall(re_obj2, html)
     x = 0
+    res = list()
     for each in tuple1 + tuple2:
         url = 'https://www.google.com/webhp?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8#q=%s' % each[0]
         cur_list = list(each)
@@ -99,19 +111,11 @@ def cb_increase_websites(html):
         # cur_list[0] = cur_list[0].replace("-", " ")
         cur_list.append(url)
         # print cur_list
+        res.append(cur_list)
         x = x + 1
-    print x
-
-'''Setting up user agents'''
-def agents():
-    url = 'http://www.server.com/login'
-    user_agent = 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)'  
-    values = {'username' : 'yh1456@nyu.edu',  'password' : 'Yu//910503' }  
-    headers = { 'User-Agent' : user_agent }  
-    data = urllib.urlencode(values)  
-    request = urllib2.Request(url, data, headers)  
-    response = urllib2.urlopen(request)  
-    page = response.read()
+    res.append(x)
+    # print x
+    return res
 
 '''get the gift card information from ebay api'''
 def ebay_api_data(input_list):
@@ -130,11 +134,13 @@ def create_duplicates_cb_links(cb_lists):
     i = len(cb_lists)
     for x in range(0, i):
         for cur_list in cb_lists:
+            cur_list[0] = cur_list[0] + random.choice(string.letters)
             cur_list[2] = cur_list[2] + random.choice(string.letters)
             # print cur_list
             new_list.append(cur_list)
     new_list = cb_lists + new_list
-    print len(new_list)
+    # print len(new_list)
+    return new_list
 
 '''enlarge the ebay api dataset'''
 def create_duplicates_ebay(ebay_lists):
@@ -146,20 +152,51 @@ def create_duplicates_ebay(ebay_lists):
             # -- TODO --
     print i
 
-'''convert lists to json object to store them in s3/spark'''
+'''enlarge the cash back increase websites'''
+def create_duplicates_increase_cb_links(cb_increase_lists):
+    new_list = list()
+    i = len(cb_increase_lists)
+    for x in range(0, i):
+        for cur_list in cb_increase_lists:
+            # skip the last info
+            if (type(cur_list) != int):
+                cur_list[0] = cur_list[0] + random.choice(string.letters)
+                cur_list[3] = cur_list[3] + random.choice(string.letters)
+                # print cur_list
+                new_list.append(cur_list)
+    new_list = cb_increase_lists + new_list
+    # print len(new_list)
+    return new_list
+
+
+'''convert full lists with three parameters to json object to store them in s3/spark'''
 def lists_to_json(cb_lists):
-    # -- TODO --
-    return cb_lists
+    join = "["
+    for cur_list in cb_lists:
+        if (type(cur_list) != int):
+            cur_item = "{\"name\":\"" + cur_list[0] + "\", \"cb\":\"" + cur_list[1] + "\", \"link\":\"" + cur_list[2] + "\"}, "
+            join = join + cur_item
+    join = join[:-2] + "]"
+    # print join
+    return join
+
+def increase_lists_to_json(increase_lists):
+    join = "["
+    join = join[:-2] + "]"
+    return join
 
 '''Entrance function of the program'''
 def main():
     html = getHtml("http://www.ebates.com/stores/all/index.htm?navigation_id=22763")
     cb_lists = get_websites_cb_pairs(html)
-    duplicates_list = create_duplicates_cb_links(cb_lists)
-    # ebay_api_data(cb_lists)
-    # get_double_cb_websites(html)
-    # cb_increase_websites(html)
-
+    # duplicates_list = create_duplicates_cb_links(cb_lists)
+    # ebay_api_data(cb_lists[0])
+    cb_increase_lists = cb_increase_websites(html)
+    test = lists_to_json(cb_increase_lists)
+    print test
+    # rs = json.dumps(dict(cb_increase_lists))
+    # duplicates_lists = create_duplicates_increase_cb_links(cb_increase_lists)
+    # print len(duplicates_lists)
 
 # Running
 if __name__ == '__main__':
