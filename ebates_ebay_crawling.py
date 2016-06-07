@@ -124,6 +124,7 @@ def ebay_api_data(input_list):
         for cur_list in input_list:
             response = api.execute('findItemsAdvanced', {'keywords': cur_list[0] + 'Gift Card'})
             print(response.dict())
+        return response.dict()
     except ConnectionError as e:
         print(e)
         print(e.response.dict())
@@ -180,21 +181,31 @@ def lists_to_json(cb_lists):
     # print join
     return join
 
+'''convert increase cash back websites lists with four parameters into json object to store them in s3/spark'''
 def increase_lists_to_json(increase_lists):
     join = "["
+    for cur_list in increase_lists:
+        if (type(cur_list) != int):
+            cur_item = "{\"name\":\"" + cur_list[0] + "\", \"cur_cb\":\"" + str(cur_list[1]) + "\", \"past_cb\":\"" + str(cur_list[2]) + "\", \"link\":\"" + cur_list[3] + "\"}, "
+            join = join + cur_item
     join = join[:-2] + "]"
     return join
+
+# def convert_ebay_json(ebay_json):
+   # for cur 
 
 '''Entrance function of the program'''
 def main():
     html = getHtml("http://www.ebates.com/stores/all/index.htm?navigation_id=22763")
     cb_lists = get_websites_cb_pairs(html)
     # duplicates_list = create_duplicates_cb_links(cb_lists)
-    # ebay_api_data(cb_lists[0])
+    ebay_json = ebay_api_data(cb_lists)
+    print ebay_json
+    s = json.dumps(ebay_json)
+    # print s
     cb_increase_lists = cb_increase_websites(html)
-    test = lists_to_json(cb_increase_lists)
-    print test
-    # rs = json.dumps(dict(cb_increase_lists))
+    test = increase_lists_to_json(cb_increase_lists)
+    # s = json.dumps(dict(cb_increase_lists))
     # duplicates_lists = create_duplicates_increase_cb_links(cb_increase_lists)
     # print len(duplicates_lists)
 
