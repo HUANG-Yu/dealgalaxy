@@ -120,11 +120,12 @@ def cb_increase_websites(html):
 
 '''get the gift card information from ebay api'''
 def ebay_api_data(input_list):
-    f = open('ebay_gc_info', 'w+')
+    f = open('ebay_gc', 'w+')
     f.write("[")
     res = dict()
     size = len(input_list)
     try:
+        api = Finding(appid="YuHUANG-insightd-PRD-04d8cb02c-4739185d")
         for i in range(0, size):
             cur_list = input_list[i]
             print cur_list[0]
@@ -143,9 +144,10 @@ def ebay_api_data(input_list):
             '''
             if (i != size - 1):
                 f.write(json.dumps(response.dict()))
-                f.write(",")
+                f.write(",\n")
             else:
                 f.write(json.dumps(response.dict()))
+                f.write("\n")
         f.write("]")
         f.close()
     except ConnectionError as e:
@@ -199,18 +201,21 @@ def create_duplicates_increase_cb_links(cb_increase_lists):
 
 '''convert full lists with three parameters to json object to store them in s3/spark'''
 def lists_to_json(cb_lists):
+    f = open('ebates', 'w+')
     join = "["
     for cur_list in cb_lists:
         if (type(cur_list) != int):
-            cur_item = "{\"name\":\"" + cur_list[0] + "\", \"cb\":\"" + cur_list[1] + "\", \"link\":\"" + cur_list[2] + "\"}, "
+            cur_item = "{\"name\":\"" + cur_list[0] + "\", \"cb\":\"" + cur_list[1] + "\", \"link\":\"" + cur_list[2] + "\"}, \n"
             join = join + cur_item
     join = join[:-2] + "]"
+    f.write(join)
+    f.close()
     # print join
     return join
 
 '''convert increase cash back websites lists with four parameters into json object to store them in s3/spark'''
 def increase_lists_to_json(increase_lists):
-    f = open('ebates_info', 'w+')
+    f = open('ebates_increase', 'w+')
     join = "["
     for cur_list in increase_lists:
         if (type(cur_list) != int):
@@ -221,22 +226,41 @@ def increase_lists_to_json(increase_lists):
     f.close()
     return join
 
-# def convert_ebay_json(ebay_json):
-   # for cur 
+'''generate the brand list by crawling the data from brand names websites - 2060 in total'''
+def get_brand_list():
+    html = getHtml("http://www.namedevelopment.com/brand-names.html")
+    reg = r'<li>(.+?)</li>'
+    reg_obj = re.compile(reg)
+    brand_list = list()
+    brand_tuples = re.findall(reg_obj, html)
+    for cur_brand in brand_tuples:
+        if (len(cur_brand) >= 4 and cur_brand[-4:] != '</a>'):
+            cur_brand = cur_brand.replace(" ", "-")
+            brand_list.append(cur_brand)
+            # print cur_brand
+    # print len(brand_list)
+    # print brand_list
+    return brand_list
 
+'''generate the category from the json file converted from the exel template offered by Google'''
 def get_categories():
     category_list = list()
     return category_list
 
+'''generate the item list - format: item, source websites, category, brand, price, lowest price'''
+# def get_item_list(cb_lists, category_list, brand_list):
+
+'''generate the coupon code which consists of uppercase letter and digts in random order'''
 def coupon_code_generator(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
-'''generate the coupon for given websites - format: websites, coupon code, category, start dates, expire dates, '''
+'''generate the coupon for given websites - format: websites, coupon code, category, brands, start dates, expire dates'''
 def coupon_generator(cb_lists, category_list):
+    brand_lists = get_brand_list()
     coupon_list_json = "["
-    for i in range(0, 10000000):
+    for i in range(0, 100):
         cur_item = "{\"name\":\"" + cur_list[0] + "\", \"cb\":\"" + cur_list[1] + "\", \"link\":\"" + cur_list[2] + "\"}, "
-    coupon_list_json = coupon_list_json + "]"
+    coupon_list_json = coupon_list_json[:-2] + "]"
     return coupon_list
 
 # def item_generator():
@@ -245,13 +269,13 @@ def coupon_generator(cb_lists, category_list):
 def main():
     html = getHtml("http://www.ebates.com/stores/all/index.htm?navigation_id=22763")
     cb_lists = get_websites_cb_pairs(html)
-    duplicates_list = create_duplicates_cb_links(cb_lists)
-    increase_lists_to_json(duplicates_list)
-    # ebay_api_data(duplicates_list)
-    cb_increase_lists = cb_increase_websites(html)
+    # run the following commands in sequence
+    # duplicates_lists = create_duplicates_cb_links(cb_lists)
+    # lists_to_json(duplicates_lists)
+    lists_to_json(cb_lists)
+    #ebay_api_data(cb_lists)
+    # cb_increase_lists = cb_increase_websites(html)
     print unicode(datetime.datetime.now())
-    # duplicates_lists = create_duplicates_increase_cb_links(cb_increase_lists)
-    # print len(duplicates_lists)
 
 # Running
 if __name__ == '__main__':
