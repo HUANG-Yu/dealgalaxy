@@ -1,6 +1,7 @@
 #coding=utf-8
 import re
 import json
+import datetime
 import random
 import urllib
 import urllib2
@@ -31,7 +32,6 @@ def get_user_agent():
 def agents():
     url = 'http://www.server.com/login'
     user_agent = 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)'  
-    values = {'username' : 'yh1456@nyu.edu',  'password' : 'Yu//910503' }  
     headers = { 'User-Agent' : user_agent }  
     data = urllib.urlencode(values)  
     request = urllib2.Request(url, data, headers)  
@@ -65,6 +65,7 @@ def get_websites_cb_pairs(html):
         # cur_list[0] = cur_list[0].replace("-", " ")
         # print cur_list[0]
         cur_list.append(url)
+        # print x
         # print cur_list
         res.append(cur_list)
         x = x + 1
@@ -119,12 +120,34 @@ def cb_increase_websites(html):
 
 '''get the gift card information from ebay api'''
 def ebay_api_data(input_list):
+    f = open('ebay_gc_info', 'w+')
+    f.write("[")
+    res = dict()
+    size = len(input_list)
     try:
-        api = Finding(appid="YuHUANG-insightd-PRD-04d8cb02c-4739185d")
-        for cur_list in input_list:
-            response = api.execute('findItemsAdvanced', {'keywords': cur_list[0] + 'Gift Card'})
-            print(response.dict())
-        return response.dict()
+        for i in range(0, size):
+            cur_list = input_list[i]
+            print cur_list[0]
+            if (i != 1607):
+                response = api.execute('findItemsAdvanced', {'keywords': cur_list[0] + ' Gift Card'})
+                join_string = str(response.dict())
+            '''
+            join_string = join_string.encode(encoding='UTF-8',errors='strict')
+            join_string = join_string.replace("\"", "\\\"")
+            join_string = join_string.replace("u\\\"", "\"")
+            join_string = join_string.replace("\'s ", "|")
+            join_string = join_string.replace("\'S ", "|")
+            join_string = join_string.replace("\'", "\"")
+            join_string = join_string.replace("|", "\"")
+            join = join.replace("\'", "\"")
+            '''
+            if (i != size - 1):
+                f.write(json.dumps(response.dict()))
+                f.write(",")
+            else:
+                f.write(json.dumps(response.dict()))
+        f.write("]")
+        f.close()
     except ConnectionError as e:
         print(e)
         print(e.response.dict())
@@ -135,7 +158,7 @@ def create_duplicates_cb_links(cb_lists):
     i = len(cb_lists)
     for x in range(0, i):
         for cur_list in cb_lists:
-            cur_list[0] = cur_list[0] + random.choice(string.letters)
+            cur_list[0] = link_generator()
             cur_list[2] = cur_list[2] + random.choice(string.letters)
             # print cur_list
             new_list.append(cur_list)
@@ -153,15 +176,19 @@ def create_duplicates_ebay(ebay_lists):
             # -- TODO --
     print i
 
+'''generate website links'''
+def link_generator(size=40, chars=string.ascii_lowercase):
+    return ''.join(random.choice(chars) for _ in range(size))
+
 '''enlarge the cash back increase websites'''
 def create_duplicates_increase_cb_links(cb_increase_lists):
     new_list = list()
     i = len(cb_increase_lists)
     for x in range(0, i):
         for cur_list in cb_increase_lists:
-            # skip the last info
+            # skip the last info, which contain just one number
             if (type(cur_list) != int):
-                cur_list[0] = cur_list[0] + random.choice(string.letters)
+                cur_list[0] = 'www' + link_generator()
                 cur_list[3] = cur_list[3] + random.choice(string.letters)
                 # print cur_list
                 new_list.append(cur_list)
@@ -183,29 +210,46 @@ def lists_to_json(cb_lists):
 
 '''convert increase cash back websites lists with four parameters into json object to store them in s3/spark'''
 def increase_lists_to_json(increase_lists):
+    f = open('ebates_info', 'w+')
     join = "["
     for cur_list in increase_lists:
         if (type(cur_list) != int):
             cur_item = "{\"name\":\"" + cur_list[0] + "\", \"cur_cb\":\"" + str(cur_list[1]) + "\", \"past_cb\":\"" + str(cur_list[2]) + "\", \"link\":\"" + cur_list[3] + "\"}, "
             join = join + cur_item
     join = join[:-2] + "]"
+    f.write(join)
+    f.close()
     return join
 
 # def convert_ebay_json(ebay_json):
    # for cur 
 
+def get_categories():
+    category_list = list()
+    return category_list
+
+def coupon_code_generator(size=6, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
+
+'''generate the coupon for given websites - format: websites, coupon code, category, start dates, expire dates, '''
+def coupon_generator(cb_lists, category_list):
+    coupon_list_json = "["
+    for i in range(0, 10000000):
+        cur_item = "{\"name\":\"" + cur_list[0] + "\", \"cb\":\"" + cur_list[1] + "\", \"link\":\"" + cur_list[2] + "\"}, "
+    coupon_list_json = coupon_list_json + "]"
+    return coupon_list
+
+# def item_generator():
+
 '''Entrance function of the program'''
 def main():
     html = getHtml("http://www.ebates.com/stores/all/index.htm?navigation_id=22763")
     cb_lists = get_websites_cb_pairs(html)
-    # duplicates_list = create_duplicates_cb_links(cb_lists)
-    ebay_json = ebay_api_data(cb_lists)
-    print ebay_json
-    s = json.dumps(ebay_json)
-    # print s
+    duplicates_list = create_duplicates_cb_links(cb_lists)
+    increase_lists_to_json(duplicates_list)
+    # ebay_api_data(duplicates_list)
     cb_increase_lists = cb_increase_websites(html)
-    test = increase_lists_to_json(cb_increase_lists)
-    # s = json.dumps(dict(cb_increase_lists))
+    print unicode(datetime.datetime.now())
     # duplicates_lists = create_duplicates_increase_cb_links(cb_increase_lists)
     # print len(duplicates_lists)
 
