@@ -7,6 +7,8 @@ import urllib
 import urllib2
 import datetime
 import string
+from random import randint
+from pprint import pprint
 from ebaysdk.exception import ConnectionError
 from ebaysdk.finding import Connection as Finding
 
@@ -119,8 +121,11 @@ def cb_increase_websites(html):
     return res
 
 '''get the gift card information from ebay api'''
-def ebay_api_data(input_list):
-    f = open('ebay_gc', 'w+')
+def ebay_api_data(input_list, time_string, real = 1):
+    if (real == 1):
+        f = open('./data/' + time_string + '_ebay_gc', 'w+')
+    else:
+        f = open('./data/' + time_string + '_all_ebay_gc', 'w+')
     f.write("[")
     res = dict()
     size = len(input_list)
@@ -128,7 +133,7 @@ def ebay_api_data(input_list):
         api = Finding(appid="YuHUANG-insightd-PRD-04d8cb02c-4739185d")
         for i in range(0, size):
             cur_list = input_list[i]
-            print cur_list[0]
+            # print cur_list[0]
             if (i != 1607):
                 response = api.execute('findItemsAdvanced', {'keywords': cur_list[0] + ' Gift Card'})
                 join_string = str(response.dict())
@@ -200,28 +205,34 @@ def create_duplicates_increase_cb_links(cb_increase_lists):
 
 
 '''convert full lists with three parameters to json object to store them in s3/spark'''
-def lists_to_json(cb_lists):
-    f = open('ebates', 'w+')
+def lists_to_json(cb_lists, time_string, real = 1):
+    if (real == 1):
+        f = open('./data/' + time_string + '_ebates', 'w+')
+    else:
+        f = open('./data/' + time_string + '_all_ebates', 'w+')
     join = "["
     for cur_list in cb_lists:
         if (type(cur_list) != int):
             cur_item = "{\"name\":\"" + cur_list[0] + "\", \"cb\":\"" + cur_list[1] + "\", \"link\":\"" + cur_list[2] + "\"}, \n"
             join = join + cur_item
-    join = join[:-2] + "]"
+    join = join[:-3] + "]"
     f.write(join)
     f.close()
     # print join
     return join
 
 '''convert increase cash back websites lists with four parameters into json object to store them in s3/spark'''
-def increase_lists_to_json(increase_lists):
-    f = open('ebates_increase', 'w+')
+def increase_lists_to_json(increase_lists, time_string, real = 1):
+    if (real == 1):
+        f = open('./data/' + time_string + '_ebates_increase', 'w+')
+    else:
+        f = open('./data/' + time_string + '_all_ebates_increase', 'w+')
     join = "["
     for cur_list in increase_lists:
         if (type(cur_list) != int):
-            cur_item = "{\"name\":\"" + cur_list[0] + "\", \"cur_cb\":\"" + str(cur_list[1]) + "\", \"past_cb\":\"" + str(cur_list[2]) + "\", \"link\":\"" + cur_list[3] + "\"}, "
+            cur_item = "{\"name\":\"" + cur_list[0] + "\", \"cur_cb\":\"" + str(cur_list[1]) + "\", \"past_cb\":\"" + str(cur_list[2]) + "\", \"link\":\"" + cur_list[3] + "\"}, \n"
             join = join + cur_item
-    join = join[:-2] + "]"
+    join = join[:-3] + "]"
     f.write(join)
     f.close()
     return join
@@ -242,9 +253,38 @@ def get_brand_list():
     # print brand_list
     return brand_list
 
+def func(args):
+    """
+    description: blalbalbalbal
+       arg1:
+       arg2:
+       ret:
+    >>> func(14)
+    "hello"
+    >>> func(16)
+    alsdfj
+    """
+    saldjif
+
 '''generate the category from the json file converted from the exel template offered by Google'''
 def get_categories():
+    with open('walmart_categories_json') as data_file:    
+        data = json.load(data_file)
+    # pprint(data)
+    json_array = data['categories']
+    array_len = len(json_array)
     category_list = list()
+    for i in xrange(0, array_len):
+        cur_json = json_array[i]
+        category_list.append(cur_json['name'])
+        sub_json_array = cur_json['children']
+        sub_len = len(sub_json_array)
+        for j in xrange(0, sub_len):
+            sub_cur_json = sub_json_array[j]
+            category_list.append(sub_cur_json['name'])
+            # print sub_cur_json['name']
+        # print cur_json['name']
+    # print len(category_list)
     return category_list
 
 '''generate the item list - format: item, source websites, category, brand, price, lowest price'''
@@ -255,27 +295,60 @@ def coupon_code_generator(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
 '''generate the coupon for given websites - format: websites, coupon code, category, brands, start dates, expire dates'''
-def coupon_generator(cb_lists, category_list):
-    brand_lists = get_brand_list()
+def coupon_generator(cb_lists, category_list, brand_list):
     coupon_list_json = "["
     for i in range(0, 100):
-        cur_item = "{\"name\":\"" + cur_list[0] + "\", \"cb\":\"" + cur_list[1] + "\", \"link\":\"" + cur_list[2] + "\"}, "
-    coupon_list_json = coupon_list_json[:-2] + "]"
-    return coupon_list
+        time_pair1 = get_time_pair()
+        time_pair2 = get_time_pair()
+        cur_item = "{\"name\":\"" + random.choice(cb_lists)[0] + "\", \"coupon\":\"" + coupon_code_generator() + "\", \"brand\":\"" + random.choice(brand_list) + "\", \"start\":\""  + time_pair1[0] + "\", \"end\":\"" + time_pair1[1] + "\"},\n "
+        # + "{\"name\":\"" + cur_list[0] + "\", \"cb\":\"" + cur_list[1] + "\", \"link\":\"" + cur_list[2] + "\"},\n "
+        coupon_list_json = coupon_list_json + cur_item
+    coupon_list_json = coupon_list_json[:-3] + "]"
+    print coupon_list_json
+    return coupon_list_json
 
-# def item_generator():
+def get_time():
+    time  = datetime.datetime.now()
+    # round to the next full hour
+    time -= datetime.timedelta(minutes = time.minute, seconds = time.second, microseconds =  time.microsecond)
+    time += datetime.timedelta(hours = 1)
+    time_string = time.strftime("%Y-%m-%d_%H-%M")
+    # print time_string
+    return time_string
+
+def round_time_to_day():
+    time  = datetime.datetime.now()
+    # round to the next full hour
+    time -= datetime.timedelta(hours = time.hour, minutes = time.minute, seconds = time.second, microseconds =  time.microsecond)
+    time_string = time.strftime("%Y-%m-%d")
+    return time
+
+''' generate the coupon starting date and end date '''
+def get_time_pair():
+    start_time = round_time_to_day()
+    end_time = start_time + datetime.timedelta(randint(1,9))
+    time_pair = list()
+    time_pair.append(start_time.strftime("%Y-%m-%d"))
+    time_pair.append(end_time.strftime("%Y-%m-%d"))
+    # print start_time
+    # print end_time
+    return time_pair
 
 '''Entrance function of the program'''
 def main():
+    time_string = get_time()
+    brand_list = get_brand_list()
+    category_list = get_categories()
     html = getHtml("http://www.ebates.com/stores/all/index.htm?navigation_id=22763")
     cb_lists = get_websites_cb_pairs(html)
+    coupon_generator(cb_lists, category_list, brand_list)
     # run the following commands in sequence
     # duplicates_lists = create_duplicates_cb_links(cb_lists)
-    # lists_to_json(duplicates_lists)
-    lists_to_json(cb_lists)
+    # lists_to_json(duplicates_lists, time_string, 2)
+    # lists_to_json(cb_lists, time_string)
     #ebay_api_data(cb_lists)
     # cb_increase_lists = cb_increase_websites(html)
-    print unicode(datetime.datetime.now())
+    # print unicode(datetime.datetime.now())
 
 # Running
 if __name__ == '__main__':
