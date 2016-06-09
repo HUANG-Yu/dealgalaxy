@@ -12,34 +12,6 @@ from pprint import pprint
 from ebaysdk.exception import ConnectionError
 from ebaysdk.finding import Connection as Finding
 
-# --TODO-- appending time info to the store names, saving them all to file
-
-'''Define some user agents to wrap the scraper as some kind of browsers sending requests'''
-def get_user_agent():
-    user_agents = ['Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20130406 Firefox/23.0', \
-    'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0) Gecko/20100101 Firefox/18.0', \
-    'Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/533+ \
-    (KHTML, like Gecko) Element Browser 5.0', \
-    'IBM WebExplorer /v0.94', 'Galaxy/1.0 [en] (Mac OS X 10.5.6; U; en)', \
-    'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)', \
-    'Opera/9.80 (Windows NT 6.0) Presto/2.12.388 Version/12.14', \
-    'Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) \
-    Version/6.0 Mobile/10A5355d Safari/8536.25', \
-    'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) \
-    Chrome/28.0.1468.0 Safari/537.36', \
-    'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.0; Trident/5.0; TheWorld)']
-    return user_agents
-
-'''Setting up user agents'''
-def agents():
-    url = 'http://www.server.com/login'
-    user_agent = 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)'  
-    headers = { 'User-Agent' : user_agent }  
-    data = urllib.urlencode(values)  
-    request = urllib2.Request(url, data, headers)  
-    response = urllib2.urlopen(request)  
-    page = response.read()
-
 '''Get the webpage body in full plain text'''
 def getHtml(url):
     page = urllib.urlopen(url)
@@ -131,22 +103,12 @@ def ebay_api_data(input_list, time_string, real = 1):
     size = len(input_list)
     try:
         api = Finding(appid="YuHUANG-insightd-PRD-04d8cb02c-4739185d")
-        for i in range(0, size):
+        for i in xrange(0, size):
             cur_list = input_list[i]
             # print cur_list[0]
             if (i != 1607):
                 response = api.execute('findItemsAdvanced', {'keywords': cur_list[0] + ' Gift Card'})
                 join_string = str(response.dict())
-            '''
-            join_string = join_string.encode(encoding='UTF-8',errors='strict')
-            join_string = join_string.replace("\"", "\\\"")
-            join_string = join_string.replace("u\\\"", "\"")
-            join_string = join_string.replace("\'s ", "|")
-            join_string = join_string.replace("\'S ", "|")
-            join_string = join_string.replace("\'", "\"")
-            join_string = join_string.replace("|", "\"")
-            join = join.replace("\'", "\"")
-            '''
             if (i != size - 1):
                 f.write(json.dumps(response.dict()))
                 f.write(",\n")
@@ -163,7 +125,7 @@ def ebay_api_data(input_list, time_string, real = 1):
 def create_duplicates_cb_links(cb_lists):
     new_list = list()
     i = len(cb_lists)
-    for x in range(0, i):
+    for x in xrange(0, i):
         for cur_list in cb_lists:
             cur_list[0] = link_generator()
             cur_list[2] = cur_list[2] + random.choice(string.letters)
@@ -177,7 +139,7 @@ def create_duplicates_cb_links(cb_lists):
 def create_duplicates_ebay(ebay_lists):
     new_list = list()
     i = len(ebay_lists)
-    for x in range(0, i):
+    for x in xrange(0, i):
         for cur_list in ebay_lists:
             cur_list = cur_list
             # -- TODO --
@@ -218,7 +180,6 @@ def lists_to_json(cb_lists, time_string, real = 1):
     join = join[:-3] + "]"
     f.write(join)
     f.close()
-    # print join
     return join
 
 '''convert increase cash back websites lists with four parameters into json object to store them in s3/spark'''
@@ -253,19 +214,6 @@ def get_brand_list():
     # print brand_list
     return brand_list
 
-def func(args):
-    """
-    description: blalbalbalbal
-       arg1:
-       arg2:
-       ret:
-    >>> func(14)
-    "hello"
-    >>> func(16)
-    alsdfj
-    """
-    saldjif
-
 '''generate the category from the json file converted from the exel template offered by Google'''
 def get_categories():
     with open('walmart_categories_json') as data_file:    
@@ -287,25 +235,25 @@ def get_categories():
     # print len(category_list)
     return category_list
 
-'''generate the item list - format: item, source websites, category, brand, price, lowest price'''
-# def get_item_list(cb_lists, category_list, brand_list):
-
 '''generate the coupon code which consists of uppercase letter and digts in random order'''
 def coupon_code_generator(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
 '''generate the coupon for given websites - format: websites, coupon code, category, brands, start dates, expire dates'''
-def coupon_generator(cb_lists, category_list, brand_list):
+def coupon_generator(cb_lists, category_list, brand_list, time_string):
+    f = open('./data/' + time_string + 'coupon', 'w+')
     coupon_list_json = "["
-    for i in range(0, 100):
-        time_pair1 = get_time_pair()
-        time_pair2 = get_time_pair()
-        cur_item = "{\"name\":\"" + random.choice(cb_lists)[0] + "\", \"coupon\":\"" + coupon_code_generator() + "\", \"brand\":\"" + random.choice(brand_list) + "\", \"start\":\""  + time_pair1[0] + "\", \"end\":\"" + time_pair1[1] + "\"},\n "
-        # + "{\"name\":\"" + cur_list[0] + "\", \"cb\":\"" + cur_list[1] + "\", \"link\":\"" + cur_list[2] + "\"},\n "
-        coupon_list_json = coupon_list_json + cur_item
+    cb_len = len(cb_lists)
+    for j in xrange(0, 10):
+        for i in range(0, cb_len):
+            time_pair1 = get_time_pair()
+            cur_item = "{\"name\":\"" + random.choice(cb_lists)[0] + "\", \"coupon\":\"" + coupon_code_generator() + "\", \"brand\":\"" + random.choice(brand_list) + "\", \"discount\":\"" + str(round(random.random()/4, 2) + 0.05) + "\", \"start\":\""  + time_pair1[0] + "\", \"end\":\"" + time_pair1[1] + "\"},\n "
+            # + "{\"name\":\"" + cur_list[0] + "\", \"cb\":\"" + cur_list[1] + "\", \"link\":\"" + cur_list[2] + "\"},\n "
+            coupon_list_json = coupon_list_json + cur_item
     coupon_list_json = coupon_list_json[:-3] + "]"
-    print coupon_list_json
-    return coupon_list_json
+    f.write(coupon_list_json)
+    f.close()
+    # print coupon_list_json
 
 def get_time():
     time  = datetime.datetime.now()
@@ -334,30 +282,64 @@ def get_time_pair():
     # print end_time
     return time_pair
 
+'''get the sublink of the 6pm page'''
+def get_item_list():
+    link_prev = 'http://www.6pm.com/null-page1453/.zso?p='
+    item_list = list()
+    for i in xrange(1, 1450): # 1450
+        cur_link = getHtml(link_prev + str(i))
+        cur_link_re = r'<span class="brandName" itemprop="brand">(.+?)</span>\n<span class="productName" itemprop="name">(.+?)</span>\n<span class="price-6pm">(.+?)</span>'
+        cur_link_re_obj = re.compile(cur_link_re)
+        tuples = re.findall(cur_link_re_obj, cur_link)
+        # print tuples
+        item_list.extend(list(tuples))
+    # print item_list
+    return item_list
+
+'''generate the item list - format: item, source websites, category, brand, price, lowest price'''
+def get_item_json(item_list, cb_lists, time_string):
+    f = open('./data/' + time_string + 'item_list', 'w+')
+    join = "["
+    for cur_item in item_list:
+        # print cur_item
+        cur_string = "{\"item\":\"" + cur_item[1] + "\", \"price\":\"" + cur_item[2] + "\", \"website\":\"" + random.choice(cb_lists)[0] + "\"}, \n"
+        join = join + cur_string
+    join = join[:-3] + "]"
+    f.write(join)
+    f.close()
+
+# def item_price_fluctuation():
+
+        
+
 '''Entrance function of the program'''
 def main():
     time_string = get_time()
     brand_list = get_brand_list()
+    print 'brand list finished'
     category_list = get_categories()
+    print 'category list finished'
     html = getHtml("http://www.ebates.com/stores/all/index.htm?navigation_id=22763")
     cb_lists = get_websites_cb_pairs(html)
-    coupon_generator(cb_lists, category_list, brand_list)
+    print 'cash back list finised'
+    item_list = get_item_list()
+    get_item_json(item_list, cb_lists, time_string)
+    '''
+    # ebay_api_data(cb_lists, time_string)
+    print 'ebay json get'
+    # lists_to_json(cb_lists, time_string)
+    print 'cash back json get'
+    cb_increase_lists = cb_increase_websites(html)
+    # increase_lists_to_json(cb_increase_lists, time_string)
+    print 'increase cash back json get'
+    coupon_generator(cb_lists, category_list, brand_list, time_string)
+    print 'coupon generator finished'
     # run the following commands in sequence
     # duplicates_lists = create_duplicates_cb_links(cb_lists)
     # lists_to_json(duplicates_lists, time_string, 2)
-    # lists_to_json(cb_lists, time_string)
-    #ebay_api_data(cb_lists)
-    # cb_increase_lists = cb_increase_websites(html)
     # print unicode(datetime.datetime.now())
+    '''
 
 # Running
 if __name__ == '__main__':
     main()
-
-''' processing - change whitespace with hyphen
-double_cb_html = getHtml("http://www.ebates.com/summer-sales.htm?navigation_id=22763")
-
-get_double_cb_websites(double_cb_html)
-
-get_websites_cb_pairs(html)
-'''
