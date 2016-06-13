@@ -333,10 +333,10 @@ def get_item_json(item_list, category_list, cb_lists, time_string):
 
 def get_change_price(before_price):
     portion = before_price * 0.1
-    return str(before_price + random.uniform(-portion, portion))
+    return str(round(before_price + random.uniform(-portion, portion), 2))
 
 def item_price_fluctuation(time_string):
-    f = open('./data/' + time_string[:-6] + 'item_json', 'w+')
+    f = open('./data/' + time_string[:-6] + 'item_list', 'w+')
     with open('item_json', 'r') as input:    
         for line in input:
             temp_s = "\"price\":\"$"
