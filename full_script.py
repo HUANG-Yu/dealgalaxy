@@ -362,7 +362,7 @@ def main():
     time_string = get_time()
 
     item_price_fluctuation(time_string)
-    '''
+    
     brand_list = get_brand_list()
     print 'brand list finished'
 
@@ -394,7 +394,7 @@ def main():
 
     coupon_generator(duplicates_lists, category_list, brand_list, time_string)
     print 'coupon generator finished'
-    '''
+    
 
     '''
     needed only for first time
