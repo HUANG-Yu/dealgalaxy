@@ -373,6 +373,9 @@ def main():
     cb_lists = get_websites_cb_pairs(html)
     print 'cash back list finised'
 
+    ebay_api_data(cb_lists, time_string)
+    print 'ebay json get'
+
     lists_to_json(cb_lists, time_string)
     print 'cash back json get'
 
@@ -386,15 +389,11 @@ def main():
     increase_lists_to_json(cb_increase_lists, time_string)
     print 'increase cash back json get'
 
-    ebay_api_data(cb_lists, time_string)
-    print 'ebay json get'
-
     # ebay_api_data(duplicates_lists, time_string)
     # print 'duplicates ebay json get'    
 
     coupon_generator(duplicates_lists, category_list, brand_list, time_string)
     print 'coupon generator finished'
-    
 
     '''
     needed only for first time
