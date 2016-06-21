@@ -245,21 +245,34 @@ def item_formatter(time_string):
 '''get the gift card information from ebay api'''
 def ebay_api_data(input_list, time_string, real = 1):
     if (real == 1):
-        f = open('./data/' + time_string[:-6] + 'ebay_gc', 'w+')
+        f = open('./data/' + time_string[:-6] + 'ebay_gc.txt', 'w+')
     else:
         f = open('./data/' + time_string[:-6] + 'all_ebay_gc', 'w+')
     res = dict()
     size = len(input_list)
     try:
         api = Finding(appid="YuHUANG-insightd-PRD-04d8cb02c-4739185d")
-        for i in xrange(0, 1):
-        # for i in xrange(0, size):
+        print size
+        for i in xrange(0, size):
+            print i
+            if (i == 50):
+                continue
             cur_list = input_list[i]
             if (cur_list[0] != 'soak-&-sleep'):
                 response = api.execute('findItemsAdvanced', {'keywords': cur_list[0] + ' Gift Card'})
-                print type(response.json())
-                join_string = str(response.dict())
-
+                json_data1 = json.dumps(response.dict(), ensure_ascii=True)
+                json_data = json.loads(json_data1)
+                if (json_data['searchResult']['_count'] == '0'):
+                    continue
+                json_array = json_data['searchResult']['item']
+                array_len = len(json_array)
+                for j in xrange(0, array_len):
+                    cur_obj = json_array[j]
+                    list_info = cur_obj['listingInfo']
+                    selling_status = cur_obj['sellingStatus']
+                    half1 = time_string[:-6] + ',' + cur_obj['itemId'].replace(',','') + ',' + cur_obj['title'].replace(',','') + ',' + cur_obj['viewItemURL'] + ',' + list_info['buyItNowAvailable'] + ',' + list_info['startTime'] + ','
+                    half2 =  list_info['endTime'] + ',' + selling_status['currentPrice']['value'] + ',' + selling_status['currentPrice']['value'] + ',' +cur_obj['autoPay'] + '\n'
+                    f.write(half1.encode('utf-8') + half2.encode('utf-8'))
         f.close()
     except ConnectionError as e:
         print(e)
