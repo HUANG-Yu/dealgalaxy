@@ -245,16 +245,14 @@ def item_formatter(time_string):
 '''get the gift card information from ebay api'''
 def ebay_api_data(input_list, time_string, real = 1):
     if (real == 1):
-        f = open('./data/' + time_string[:-6] + 'ebay_gc.txt', 'w+')
+        f = open('./data/' + time_string[:-6] + 'ebay.txt', 'w+')
     else:
         f = open('./data/' + time_string[:-6] + 'all_ebay_gc', 'w+')
     res = dict()
     size = len(input_list)
     try:
         api = Finding(appid="YuHUANG-insightd-PRD-04d8cb02c-4739185d")
-        print size
         for i in xrange(0, size):
-            print i
             if (i == 50):
                 continue
             cur_list = input_list[i]
@@ -271,7 +269,7 @@ def ebay_api_data(input_list, time_string, real = 1):
                     list_info = cur_obj['listingInfo']
                     selling_status = cur_obj['sellingStatus']
                     half1 = time_string[:-6] + ',' + cur_obj['itemId'].replace(',','') + ',' + cur_obj['title'].replace(',','') + ',' + cur_obj['viewItemURL'] + ',' + list_info['buyItNowAvailable'] + ',' + list_info['startTime'] + ','
-                    half2 =  list_info['endTime'] + ',' + selling_status['currentPrice']['value'] + ',' + selling_status['currentPrice']['value'] + ',' +cur_obj['autoPay'] + '\n'
+                    half2 =  list_info['endTime'] + ',' + selling_status['currentPrice']['value'] + ',' + selling_status['currentPrice']['value'] + ',' + cur_list[0] + ',' + cur_obj['autoPay'] + '\n'
                     f.write(half1.encode('utf-8') + half2.encode('utf-8'))
         f.close()
     except ConnectionError as e:
