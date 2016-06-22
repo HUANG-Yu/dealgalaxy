@@ -2,12 +2,7 @@ import psycopg2
 from getpass import getpass
 from pandas import read_sql
 
-config = { 'dbname': 'dealgalaxy', 
-           'user':'yhcluster',
-           'pwd':'Yu910503',
-           'host':'yhcluster.cp1oqvdsoh97.us-east-1.redshift.amazonaws.com',
-           'port':'5439'
-         }
+
 
 def create_conn(*args,**kwargs):
     config = kwargs['config']
