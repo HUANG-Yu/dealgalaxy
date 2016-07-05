@@ -24,7 +24,7 @@ Python script (using multithreading) runs at midnight and then pushes data into 
 <b>2) Visualize the past cash back information</b>
 ![alt tag](https://github.com/HUANG-Yu/dealgalaxy/blob/master/snapshot02.png)
 
-<p>The website is also able to answer the following questions</p>:
+<p>The website is also able to answer the following questions:</p>
 <p> <b>3) Current day's trending website, which offers the biggest discount </b> </p>
 <p> <b>4) Ebay Gift Card Buy-It-Now percentage and total number </b> </p>
 
