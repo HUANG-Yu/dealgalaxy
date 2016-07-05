@@ -7,6 +7,7 @@ import urllib
 import urllib2
 import datetime
 import string
+import boto3
 from random import randint
 from pprint import pprint
 from ebaysdk.exception import ConnectionError
@@ -279,7 +280,8 @@ def ebay_api_data(input_list, time_string, real = 1):
 '''Entrance function of the program'''
 def main():
 
-    time_string = get_time()
+    time_string = get_time() #'2016-07-03_00-00'
+    print time_string
 
     brand_list = get_brand_list()
     print 'brand list finished'
@@ -297,15 +299,23 @@ def main():
     lists_to_json(cb_lists, time_string)
     print 'cash back json get'
 
-    # coupon_generator(cb_lists, category_list, brand_list, time_string)
-    # print 'coupon generator finished'
+    coupon_generator(cb_lists, category_list, brand_list, time_string)
+    print 'coupon generator finished'
 
-    # item_price_fluctuation(time_string)
-    # print 'price fluctuation finished'
+    item_price_fluctuation(time_string)
+    print 'price fluctuation finished'
 
-    # item_formatter(time_string)
-    # print 'clean item data finished'
-    
+    item_formatter(time_string)
+    print 'clean item data finished'
+
+    s3 = boto3.resource('s3')
+    s3.Bucket('deals-yuhuang').upload_file('/Users/yuhuang/Desktop/dealgalaxy/data/' + time_string[:-6] + 'ebates.txt', 'Clean_Data/' + time_string[:-6] + 'ebates.txt')
+    s3.Bucket('deals-yuhuang').upload_file('/Users/yuhuang/Desktop/dealgalaxy/data/' + time_string[:-6] + 'coupon.txt', 'Clean_Data/' + time_string[:-6] + 'coupon.txt')
+    s3.Bucket('deals-yuhuang').upload_file('/Users/yuhuang/Desktop/dealgalaxy/data/' + time_string[:-6] + 'ebay.txt', 'Clean_Data/' + time_string[:-6] + 'ebay.txt')
+    s3.Bucket('deals-yuhuang').upload_file('/Users/yuhuang/Desktop/dealgalaxy/data/' + time_string[:-6] + 'items.txt', 'Clean_Data/' + time_string[:-6] + 'items.txt')
+
+
+
 # Running
 if __name__ == '__main__':
     main()
